@@ -2,9 +2,9 @@
 " Maintainer:    lwflwf1
 " Website:       https://github.com/lwflwf1/vim-session-manager.com
 " Created Time:  2021-04-21 16:03:18
-" Last Modified: 2021-04-29 16:29:18
+" Last Modified: 2021-04-30 00:52:39
 " File:          vim-session-manager.vim
-" Version:       0.1.2
+" Version:       0.1.3
 " License:       MIT
 
 if exists("g:loaded_vim_session_manager")

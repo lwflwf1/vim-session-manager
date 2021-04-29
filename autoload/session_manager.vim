@@ -2,9 +2,9 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-04-29 16:22:15
+" Last Modified : 2021-04-30 00:53:01
 " File          : session_manager.vim
-" Version       : 0.1.2
+" Version       : 0.1.3
 " License       : MIT
 
 let s:this_session = ''
@@ -165,12 +165,8 @@ function session_manager#sessionList() abort
                 \', clear_before_load '.string(g:session_clear_before_load ==# 1)
                 \,' '.repeat('=', 80)] + [" Session".repeat(" ", l:maxlen - 3)."Description"] + l:session_infos
 
-    if bufname() ==# '' && winnr('$') ==# 1
-        file __SessionList__
-    else
-        set splitbelow
-        botright split __SessionList__
-    endif
+    set splitbelow
+    botright split __SessionList__
 
     call append(0, l:session_infos)
     call cursor(4, 1)
