@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-04-30 16:06:28
+" Last Modified : 2021-05-01 02:11:14
 " File          : session_manager.vim
 " Version       : 0.1.4
 " License       : MIT
@@ -71,14 +71,12 @@ function! session_manager#sessionSave(...) abort
         let l:session_name = substitute(l:session_info[0], '\v\s', '', 'g')
         let l:session_file = g:session_dir.l:session_name.'.vim'
         let l:description = get(l:session_info, 1, '')
-        if l:session_file ==# s:this_session
-            let s:this_session_description = l:description
-        endif
     endif
 
     execute('mksession! '.l:session_file)
     call writefile(['" '.l:description] + readfile(l:session_file), l:session_file)
     let s:this_session = l:session_file
+    let s:this_session_description = l:description
     call session_manager#saveLastSessionName()
 endfunction
 
@@ -114,10 +112,11 @@ function! session_manager#sessionLoad(...) abort
         return 1
     else
         let s:this_session = ''
+        if exists('s:this_session_description') | unlet s:this_session_description | endif
         call session_manager#clearAllBuffers(g:session_clear_before_load)
         execute('source '.l:session_file)
         nohlsearch
-        " keepalt noautocmd windo if &ft ==# '' | bwipeout! | endif
+        keepalt noautocmd windo if &ft ==# '' | bwipeout! | endif
         " if bufexists("__SessionList__")
         "     bwipeout! __SessionList__
         " endif
@@ -335,3 +334,9 @@ endfunction
 function! SessionStatusLine() abort
     return fnamemodify(s:this_session, ':t:r')
 endfunction
+
+augroup track_session_group
+    autocmd!
+    " FIXME: cursor will goto line 1
+    autocmd BufEnter * if g:session_track_current_session ==# 1 && s:this_session !=# '' | call session_manager#sessionSave() | endif
+augroup END
