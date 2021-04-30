@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-04-30 00:53:01
+" Last Modified : 2021-04-30 11:46:20
 " File          : session_manager.vim
 " Version       : 0.1.3
 " License       : MIT
@@ -83,8 +83,13 @@ endfunction
 function session_manager#sessionLoad(...) abort
     if a:0 ==# 0
         if empty(s:this_session)
-            let l:session_name = 'default_session'
-            let l:session_file = g:session_dir.l:session_name.'.vim'
+            if filereadable(s:last_session_file)
+                let l:session_file = readfile(s:last_session_file, '', 1)[0]
+                let l:session_name = session_manager#getSessionName(l:session_file)
+            else
+                let l:session_name = 'default_session'
+                let l:session_file = g:session_dir.l:session_name.'.vim'
+            endif
         else
             let l:session_name = session_manager#getSessionName(s:this_session)
             let l:session_file = s:this_session
@@ -110,9 +115,10 @@ function session_manager#sessionLoad(...) abort
         call session_manager#clearAllBuffers(g:session_clear_before_load)
         execute('source '.l:session_file)
         nohlsearch
-        if bufexists("__SessionList__")
-            bwipeout! __SessionList__
-        endif
+        " keepalt noautocmd windo if &ft ==# '' | bwipeout! | endif
+        " if bufexists("__SessionList__")
+        "     bwipeout! __SessionList__
+        " endif
         let s:this_session = l:session_file
         call session_manager#saveLastSessionName()
         normal! zvzz
