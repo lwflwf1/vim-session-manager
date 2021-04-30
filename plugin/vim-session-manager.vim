@@ -2,9 +2,9 @@
 " Maintainer:    lwflwf1
 " Website:       https://github.com/lwflwf1/vim-session-manager.com
 " Created Time:  2021-04-21 16:03:18
-" Last Modified: 2021-04-30 00:52:39
+" Last Modified: 2021-04-30 13:39:50
 " File:          vim-session-manager.vim
-" Version:       0.1.3
+" Version:       0.1.4
 " License:       MIT
 
 if exists("g:loaded_vim_session_manager")
@@ -32,7 +32,7 @@ augroup session_auto_save_load_group
     autocmd VimEnter * ++nested if g:session_autoload_enable ==# 1 | call session_manager#sessionLoad(session_manager#getLastSessionName()) | endif
     autocmd VimLeavePre * if g:session_autosave_enable ==# 1 | call session_manager#sessionSave() | endif
     " FIXME: cursor will goto line 1
-    autocmd BufEnter * if g:session_track_current_session ==# 1 && !empty(s:this_session) | call session_manager#sessionSave() | endif
+    autocmd BufEnter * if g:session_track_current_session ==# 1 | call session_manager#sessionSave() | endif
 augroup END
 
 command! -nargs=0 SessionList call session_manager#sessionList()

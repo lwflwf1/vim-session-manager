@@ -2,15 +2,15 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-04-30 11:46:20
+" Last Modified : 2021-04-30 16:06:28
 " File          : session_manager.vim
-" Version       : 0.1.3
+" Version       : 0.1.4
 " License       : MIT
 
 let s:this_session = ''
 let s:last_session_file = g:session_dir.'.last_session'
 
-function session_manager#echoError(...) abort
+function! session_manager#echoError(...) abort
     echohl ErrorMsg
     for msg in a:000
         echomsg msg
@@ -18,60 +18,62 @@ function session_manager#echoError(...) abort
     echohl None
 endfunction
 
-function session_manager#saveLastSessionName() abort
+function! session_manager#saveLastSessionName() abort
     if empty(s:this_session)
         let s:this_session = g:session_dir."default_session.vim"
     endif
     call writefile([s:this_session], s:last_session_file)
 endfunction
 
-function session_manager#getLastSessionName() abort
+function! session_manager#getLastSessionName() abort
     if filereadable(s:last_session_file)
-        " let s:this_session = readfile(s:last_session_file, '', 1)[0]
         return session_manager#getSessionName(readfile(s:last_session_file, '', 1)[0])
     else
         return 'No Last Session'
     endif
 endfunction
 
-function session_manager#getSessionName(session_full_path) abort
-    " return substitute(a:session_full_path, '\v.*[\/]|\.vim', '', 'g')
+function! session_manager#getSessionName(session_full_path) abort
     return fnamemodify(a:session_full_path, ':t:r')
 endfunction
 
-function session_manager#getListedBufnrs() abort
+function! session_manager#getListedBufnrs() abort
     return filter(range(1, bufnr('$')), 'buflisted(v:val)')
 endfunction
 
-function session_manager#clearAllBuffers(flag) abort
+function! session_manager#clearAllBuffers(flag) abort
     if a:flag
         wall
-        " for bufnr in GetListedBufnrs()
-        "     execute "bwipeout ".bufnr
-        " endfor
         silent %bwipeout
     endif
 endfunction
 
-function session_manager#sessionSave(...) abort
+function! session_manager#sessionSave(...) abort
     if a:0 ==# 0
         if empty(s:this_session)
             let l:session_file = g:session_dir."default_session.vim"
             let l:description = "This is the default session"
         else
-            let l:session_file = s:this_session
-            let l:this_session_file_line1 = readfile(s:this_session, '', 1)[0]
-            if l:this_session_file_line1[0] ==# '"'
-                " let l:description = readfile(s:this_session, '', 1)[0][1:]
-                let l:description = substitute(l:this_session_file_line1, '"\s*', '', '')
-            else
-                let l:description = ''
+            if !exists('s:this_session_description')
+                let l:this_session_file_line1 = readfile(s:this_session, '', 1)[0]
+                if l:this_session_file_line1[0] ==# '"'
+                    " let s:this_session_description = substitute(l:this_session_file_line1, '"\s*', '', '')
+                    let s:this_session_description = trim(l:this_session_file_line1[1:])
+                else
+                    let s:this_session_description = ''
+                endif
             endif
+            let l:session_file = s:this_session
+            let l:description = s:this_session_description
         endif
     else
-        let l:session_file = g:session_dir.matchstr(a:1, '\v[^:]*').'.vim'
-        let l:session_file = substitute(l:session_file, '\v\s', '', 'g')
-        let l:description = matchstr(a:1, '\v:@<=.*')
+        let l:session_info = split(a:1, ':')
+        let l:session_name = substitute(l:session_info[0], '\v\s', '', 'g')
+        let l:session_file = g:session_dir.l:session_name.'.vim'
+        let l:description = get(l:session_info, 1, '')
+        if l:session_file ==# s:this_session
+            let s:this_session_description = l:description
+        endif
     endif
 
     execute('mksession! '.l:session_file)
@@ -80,7 +82,7 @@ function session_manager#sessionSave(...) abort
     call session_manager#saveLastSessionName()
 endfunction
 
-function session_manager#sessionLoad(...) abort
+function! session_manager#sessionLoad(...) abort
     if a:0 ==# 0
         if empty(s:this_session)
             if filereadable(s:last_session_file)
@@ -126,38 +128,34 @@ function session_manager#sessionLoad(...) abort
     return 0
 endfunction
 
-function session_manager#sessionList() abort
+function! session_manager#sessionList() abort
     if bufexists("__SessionList__")
         bwipeout! __SessionList__
         if bufwinnr('__SessionList__') !=# -1
             return
         endif
     endif
-    let l:session_files = globpath(g:session_dir, '*.vim')
-    let l:sessions = split(substitute(l:session_files, '\v[^\n]*[\/]%(\S+\.vim)@=|\.vim', '', 'g'), '\n')
-    let l:this_session_index = index(l:sessions, session_manager#getSessionName(s:this_session))
-    if l:this_session_index !=# -1
-        let l:sessions[l:this_session_index] = '*'.l:sessions[l:this_session_index]
-    endif
-    " strlen("Session") = 7
-    let l:maxlen = 7
-    let l:session_names = []
 
-    for ss in l:sessions
-        let l:session_names += [" ".ss]
-        let l:len_session = strlen(ss)
-        let l:maxlen = max([l:maxlen, l:len_session])
-    endfor
+    let l:sessions = globpath(g:session_dir, '*.vim', 1, 1)
 
     let l:session_descriptions = []
-    for sfp in split(l:session_files, '\n')
-        if readfile(sfp, '', 1)[0][0] ==# '"'
-            " let l:session_descriptions += [readfile(sfp)[0][1:]]
-            let l:session_descriptions += [substitute(readfile(sfp, '', 1)[0], '\v"\s*', '', '')]
+    for sfp in l:sessions
+        let l:session_file_line1 = readfile(sfp, '', 1)[0]
+        if l:session_file_line1[0] ==# '"'
+            let l:session_descriptions += [trim(l:session_file_line1[1:])]
         else
             let l:session_descriptions += ['']
         endif
     endfor
+
+    call map(l:sessions, "fnamemodify(v:val, ':t:r')")
+    let l:this_session_index = index(l:sessions, session_manager#getSessionName(s:this_session))
+    if l:this_session_index !=# -1
+        let l:sessions[l:this_session_index] = '*'.l:sessions[l:this_session_index]
+    endif
+    call map(l:sessions, " ' '.v:val")
+    let l:session_names = deepcopy(l:sessions)
+    let l:maxlen = max(map(l:sessions, 'strlen(v:val)') + [7])
 
     let l:session_infos = []
     for index in range(len(l:session_names))
@@ -181,7 +179,7 @@ function session_manager#sessionList() abort
     echo 'q: quit, dd: delete session, <cr>: enter session'
 endfunction
 
-function session_manager#sessionListHighlight() abort
+function! session_manager#sessionListHighlight() abort
     syntax match SessionListName '\v\S+'
     syntax match SessionListDescription '\v%(\S+)@<=.*'
     syntax match SessionListType '\vSession\s+Description'
@@ -192,7 +190,7 @@ function session_manager#sessionListHighlight() abort
     highlight link SessionListSeparator Comment
 endfunction
 
-function session_manager#sessionListSetOptions() abort
+function! session_manager#sessionListSetOptions() abort
     setlocal filetype=sessionlist
     setlocal nonumber
     setlocal norelativenumber
@@ -217,7 +215,7 @@ function session_manager#sessionListSetOptions() abort
     nnoremap <silent> <buffer> q :<c-u>bwipeout!<cr>
 endfunction
 
-function session_manager#sessionDelete(bang, ...) abort
+function! session_manager#sessionDelete(bang, ...) abort
     let l:delete_this_session_flag = 0
     " if use !, delete all sessions
     if a:bang
@@ -271,14 +269,14 @@ function session_manager#sessionDelete(bang, ...) abort
             if filereadable(l:session)
                 call delete(l:session)
             else
-                call session_manager#echoError("Session: '".ss."' does not exist")
+                call session_manager#echoError("Session: '".ss."' does not exist!")
                 return
             endif
         endfor
     endif
 endfunction
 
-function session_manager#enterSessionFromList() abort
+function! session_manager#enterSessionFromList() abort
     if index([1, 2, 3], line('.')) !=# -1
         call session_manager#echoError("You can not do that!")
         return
@@ -292,7 +290,7 @@ function session_manager#enterSessionFromList() abort
     call session_manager#sessionLoad(l:session)
 endfunction
 
-function session_manager#sessionRename(...) abort
+function! session_manager#sessionRename(...) abort
     if a:0 != 2
         call session_manager#echoError("Require 2 arguments: {old_name} {new_name}!")
         return
@@ -311,7 +309,7 @@ function session_manager#sessionRename(...) abort
     endif
 endfunction
 
-function session_manager#sessionClose() abort
+function! session_manager#sessionClose() abort
     if s:this_session ==# ''
         call session_manager#echoError('You are not in a session!')
         return
@@ -320,11 +318,11 @@ function session_manager#sessionClose() abort
     call session_manager#clearAllBuffers(1)
 endfunction
 
-function session_manager#sessionCommandComplete(ArgLead, CmdLine, CursorPos) abort
-    return substitute(globpath(g:session_dir, '*.vim'), '\v[^\n]*[\/]%(\S+\.vim)@=|\.vim', '', 'g')
+function! session_manager#sessionCommandComplete(ArgLead, CmdLine, CursorPos) abort
+    return join(map(globpath(g:session_dir, '*.vim', 1, 1), 'fnamemodify(v:val, ":t:r")'), "\n")
 endfunction
 
-function session_manager#checkSessionDirectory() abort
+function! session_manager#checkSessionDirectory() abort
     if g:session_dir[strlen(g:session_dir)-1] !~# '\v[\/]'
         let g:session_dir .= '/'
     endif
@@ -334,6 +332,6 @@ function session_manager#checkSessionDirectory() abort
     endif
 endfunction
 
-function SessionStatusLine() abort
+function! SessionStatusLine() abort
     return fnamemodify(s:this_session, ':t:r')
 endfunction
