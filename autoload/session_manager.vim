@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-01 02:11:14
+" Last Modified : 2021-05-03 22:42:37
 " File          : session_manager.vim
 " Version       : 0.1.4
 " License       : MIT
@@ -41,11 +41,9 @@ function! session_manager#getListedBufnrs() abort
     return filter(range(1, bufnr('$')), 'buflisted(v:val)')
 endfunction
 
-function! session_manager#clearAllBuffers(flag) abort
-    if a:flag
-        wall
-        silent %bwipeout
-    endif
+function! session_manager#clearAllBuffers() abort
+    wall
+    silent %bwipeout
 endfunction
 
 function! session_manager#sessionSave(...) abort
@@ -111,9 +109,14 @@ function! session_manager#sessionLoad(...) abort
         call session_manager#echoError("Session: '".l:session_name."' does not exist!")
         return 1
     else
-        let s:this_session = ''
         if exists('s:this_session_description') | unlet s:this_session_description | endif
-        call session_manager#clearAllBuffers(g:session_clear_before_load)
+        if g:session_clear_before_load
+            if empty(s:this_session)
+                call session_manager#clearAllBuffers()
+            else
+                call session_manager#sessionClose()
+            endif
+        endif
         execute('source '.l:session_file)
         nohlsearch
         keepalt noautocmd windo if &ft ==# '' | bwipeout! | endif
@@ -313,8 +316,9 @@ function! session_manager#sessionClose() abort
         call session_manager#echoError('You are not in a session!')
         return
     endif
+    call session_manager#sessionSave()
     let s:this_session = ''
-    call session_manager#clearAllBuffers(1)
+    call session_manager#clearAllBuffers()
 endfunction
 
 function! session_manager#sessionCommandComplete(ArgLead, CmdLine, CursorPos) abort
