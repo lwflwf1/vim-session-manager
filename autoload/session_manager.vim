@@ -2,9 +2,9 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-03 22:42:37
+" Last Modified : 2021-05-05 00:50:03
 " File          : session_manager.vim
-" Version       : 0.1.4
+" Version       : 0.1.5
 " License       : MIT
 
 let s:this_session = ''
@@ -109,7 +109,6 @@ function! session_manager#sessionLoad(...) abort
         call session_manager#echoError("Session: '".l:session_name."' does not exist!")
         return 1
     else
-        if exists('s:this_session_description') | unlet s:this_session_description | endif
         if g:session_clear_before_load
             if empty(s:this_session)
                 call session_manager#clearAllBuffers()
@@ -124,6 +123,7 @@ function! session_manager#sessionLoad(...) abort
         "     bwipeout! __SessionList__
         " endif
         let s:this_session = l:session_file
+        if exists('s:this_session_description') | unlet s:this_session_description | endif
         call session_manager#saveLastSessionName()
         normal! zvzz
     endif
