@@ -130,7 +130,11 @@ g:session_clear_before_load
 
 Load a session will wipeout all buffers by default. Set it to 0 can disable this behavier.
 
-## Bugs
+## StatusLine
+
+Use function `SessionStatusLine()` to display the current session name on your statusline
+
+`SessionStatusLine()` returns the name of the current session if you are in a session, otherwise returns `''`.
 
 ## License
 
