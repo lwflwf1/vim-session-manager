@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-05 00:50:03
+" Last Modified : 2021-05-07 19:54:18
 " File          : session_manager.vim
 " Version       : 0.1.5
 " License       : MIT
@@ -47,6 +47,8 @@ function! session_manager#clearAllBuffers() abort
 endfunction
 
 function! session_manager#sessionSave(...) abort
+    let l:save_sessionoptions = &sessionoptions
+    set sessionoptions-=blank sessionoptions-=options sessionoptions+=tabpages
     if a:0 ==# 0
         if empty(s:this_session)
             let l:session_file = g:session_dir."default_session.vim"
@@ -76,6 +78,7 @@ function! session_manager#sessionSave(...) abort
     let s:this_session = l:session_file
     let s:this_session_description = l:description
     call session_manager#saveLastSessionName()
+    let &sessionoptions = l:save_sessionoptions
 endfunction
 
 function! session_manager#sessionLoad(...) abort
