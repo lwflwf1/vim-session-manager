@@ -138,4 +138,8 @@ Use function `SessionStatusLine()` to display the current session name on your s
 
 ## License
 
+MIT
+
 ## Credits
+
+[lwflwf1](https://github.com/lwflwf1)
