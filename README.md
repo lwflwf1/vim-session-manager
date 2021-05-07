@@ -91,7 +91,7 @@ Use this command to close current session.
 
 This command will save all unsaved changes and wipeout all buffers.
 
-### configuration
+### Options
 
 ```vim
 g:session_autosave_enable
