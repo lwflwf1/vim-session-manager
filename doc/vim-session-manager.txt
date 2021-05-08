@@ -1,4 +1,5 @@
-*vim-session-manager.txt* session manager for Vim
+*vim-session-manager.txt*   session manager for Vim
+*vim-session-manager*
 
 ================================================================================
 CONTENTS                                          *vim-session-manager-contents*
