@@ -2,9 +2,9 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-08 10:59:07
+" Last Modified : 2021-05-23 16:15:10
 " File          : session_manager.vim
-" Version       : 0.1.6
+" Version       : 0.1.7
 " License       : MIT
 
 let s:this_session = ''
@@ -153,7 +153,7 @@ function! session_manager#sessionList() abort
         endif
     endfor
 
-    call map(l:sessions, "fnamemodify(v:val, ':t:r')")
+    call map(l:sessions, "fnamemodify(' '.v:val, ':t:r')")
     let l:this_session_index = index(l:sessions, session_manager#getSessionName(s:this_session))
     if l:this_session_index !=# -1
         let l:sessions[l:this_session_index] = '*'.l:sessions[l:this_session_index]
