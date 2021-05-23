@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-23 16:15:10
+" Last Modified : 2021-05-23 16:50:38
 " File          : session_manager.vim
 " Version       : 0.1.7
 " License       : MIT
@@ -153,12 +153,12 @@ function! session_manager#sessionList() abort
         endif
     endfor
 
-    call map(l:sessions, "fnamemodify(' '.v:val, ':t:r')")
+    call map(l:sessions, "fnamemodify(v:val, ':t:r')")
     let l:this_session_index = index(l:sessions, session_manager#getSessionName(s:this_session))
+    call map(l:sessions, "'  '.v:val")
     if l:this_session_index !=# -1
-        let l:sessions[l:this_session_index] = '*'.l:sessions[l:this_session_index]
+        let l:sessions[l:this_session_index] = ' *'.l:sessions[l:this_session_index][2:]
     endif
-    call map(l:sessions, " ' '.v:val")
     let l:session_names = deepcopy(l:sessions)
     let l:maxlen = max(map(l:sessions, 'strlen(v:val)') + [7])
 
