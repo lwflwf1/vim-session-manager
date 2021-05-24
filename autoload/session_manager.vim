@@ -2,13 +2,13 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-23 16:50:38
+" Last Modified : 2021-05-24 17:01:45
 " File          : session_manager.vim
-" Version       : 0.1.7
+" Version       : 0.2.0
 " License       : MIT
 
 let s:this_session = ''
-let s:last_session_file = g:session_dir.'.last_session'
+let s:session_history_file = g:session_dir.'.session_history'
 
 function! session_manager#echoError(...) abort
     echohl ErrorMsg
@@ -18,16 +18,23 @@ function! session_manager#echoError(...) abort
     echohl None
 endfunction
 
-function! session_manager#saveLastSessionName() abort
-    if empty(s:this_session)
-        let s:this_session = g:session_dir."default_session.vim"
+function! session_manager#updateSessionHistory() abort
+    if empty(s:this_session) | return | endif
+    if filereadable(s:session_history_file)
+        let l:session_history = readfile(s:session_history_file)
+    else
+        let l:session_history = []
     endif
-    call writefile([s:this_session], s:last_session_file)
+    if len(l:session_history) >= g:session_max_history
+        call writefile(l:session_history[1:]+[s:this_session], s:session_history_file)
+    elseif len(l:session_history) == 0 || l:session_history[-1] !=# s:this_session
+        call writefile([s:this_session], s:session_history_file, 'a')
+    endif
 endfunction
 
 function! session_manager#getLastSessionName() abort
-    if filereadable(s:last_session_file)
-        return session_manager#getSessionName(readfile(s:last_session_file, '', 1)[0])
+    if filereadable(s:session_history_file)
+        return session_manager#getSessionName(readfile(s:session_history_file, '', 1)[0])
     else
         return 'No Last Session'
     endif
@@ -77,27 +84,40 @@ function! session_manager#sessionSave(...) abort
     call writefile(['" '.l:description] + readfile(l:session_file), l:session_file)
     let s:this_session = l:session_file
     let s:this_session_description = l:description
-    call session_manager#saveLastSessionName()
+    " call session_manager#updateSessionHistory()
     let &sessionoptions = l:save_sessionoptions
 endfunction
-
 function! session_manager#sessionLoad(...) abort
     if a:0 ==# 0
-        if empty(s:this_session)
-            if filereadable(s:last_session_file)
-                let l:session_file = readfile(s:last_session_file, '', 1)[0]
-                let l:session_name = session_manager#getSessionName(l:session_file)
-            else
+        if filereadable(s:session_history_file)
+            let l:session_history = readfile(s:session_history_file)
+            if len(l:session_history) == 0
                 let l:session_name = 'default_session'
                 let l:session_file = g:session_dir.l:session_name.'.vim'
+                " echomsg 'No previous session!'
+                " return 0
+            else
+                let l:session_file = l:session_history[-1]
+                let l:session_name = session_manager#getSessionName(l:session_file)
+                " call session_manager#updateSessionHistory(1)
+                call remove(l:session_history, -1)
+                call writefile(l:session_history, s:session_history_file)
             endif
         else
-            let l:session_name = session_manager#getSessionName(s:this_session)
-            let l:session_file = s:this_session
+            let l:session_name = 'default_session'
+            let l:session_file = g:session_dir.l:session_name.'.vim'
         endif
-    elseif a:1 ==# 'No Last Session'
-        echomsg 'No Last Session!'
-        return 0
+    " elseif a:1 ==# 'No Last Session'
+    "     echomsg 'No Last Session!'
+    "     return 0
+    elseif a:1[0] ==# '~'
+        if filereadable(s:session_history_file) && len(readfile(s:session_history_file)) >= a:1[1:]
+            let l:session_file = readfile(s:session_history_file)[-a:1[1:]]
+            let l:session_name = session_manager#getSessionName(l:session_file)
+        else
+            call echoError('No such session')
+            return
+        endif
     else
         let l:session_name = a:1
         let l:session_file = g:session_dir.l:session_name.'.vim'
@@ -127,7 +147,7 @@ function! session_manager#sessionLoad(...) abort
         " endif
         let s:this_session = l:session_file
         if exists('s:this_session_description') | unlet s:this_session_description | endif
-        call session_manager#saveLastSessionName()
+        " call session_manager#updateSessionHistory()
         normal! zvzz
     endif
     return 0
@@ -239,11 +259,10 @@ function! session_manager#sessionDelete(bang, ...) abort
             endif
             " delete session under cursor
             let l:session_name = matchstr(getline("."), '\v\S+')
-            let l:this_session_name = session_manager#getSessionName(s:this_session)
             if l:session_name ==# '*'.l:this_session_name
                 let l:session = s:this_session
                 let s:this_session = ''
-                call delete(s:last_session_file)
+                call delete(s:session_history_file)
             else
                 let l:session = g:session_dir.l:session_name.'.vim'
             endif
@@ -251,11 +270,10 @@ function! session_manager#sessionDelete(bang, ...) abort
             " echomsg 'Delete session: '.l:session
             setlocal modifiable
             normal! dd
-            setlocal nomodifiable
         else
             if !empty(s:this_session)
                 call delete(s:this_session)
-                call delete(s:last_session_file)
+                call delete(s:session_history_file)
                 " echomsg 'Delete session: '.s:this_session
                 let s:this_session = ''
             else
@@ -264,11 +282,10 @@ function! session_manager#sessionDelete(bang, ...) abort
             endif
         endif
     " if user specify arguments, and the sessions exist, delete those sessions
-    else
         for ss in a:000
             let l:session = g:session_dir.ss.'.vim'
             if l:session ==# s:this_session
-                call delete(s:last_session_file)
+                call delete(s:session_history_file)
                 let s:this_session = ''
             endif
             if filereadable(l:session)
@@ -310,7 +327,7 @@ function! session_manager#sessionRename(...) abort
     call delete(l:old_session)
     if l:old_session ==# s:this_session
         let s:this_session = l:new_session
-        call session_manager#saveLastSessionName()
+        " call session_manager#updateSessionHistory()
     endif
 endfunction
 
@@ -320,6 +337,7 @@ function! session_manager#sessionClose() abort
         return
     endif
     call session_manager#sessionSave()
+    call session_manager#updateSessionHistory()
     let s:this_session = ''
     call session_manager#clearAllBuffers()
 endfunction

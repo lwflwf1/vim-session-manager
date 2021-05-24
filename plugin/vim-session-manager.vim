@@ -2,9 +2,9 @@
 " Maintainer:    lwflwf1
 " Website:       https://github.com/lwflwf1/vim-session-manager.com
 " Created Time:  2021-04-21 16:03:18
-" Last Modified: 2021-05-23 16:15:08
+" Last Modified: 2021-05-24 16:17:28
 " File:          vim-session-manager.vim
-" Version:       0.1.7
+" Version:       0.2.0
 " License:       MIT
 
 if exists("g:loaded_vim_session_manager")
@@ -26,11 +26,14 @@ let g:session_autosave_enable       = get(g:, 'session_autosave_enable', 1)
 let g:session_autoload_enable       = get(g:, 'session_autoload_enable', 0)
 let g:session_clear_before_load     = get(g:, 'session_clear_before_load', 1)
 let g:session_track_current_session = get(g:, 'session_track_current_session', 0)
+let g:session_max_history           = get(g:, 'session_max_history', 100)
 
 augroup session_auto_save_load_group
     autocmd!
-    autocmd VimEnter * ++nested if g:session_autoload_enable ==# 1 | call session_manager#sessionLoad(session_manager#getLastSessionName()) | endif
+    autocmd VimEnter * ++nested if g:session_autoload_enable ==# 1 | call session_manager#sessionLoad() | endif
+    " autocmd VimEnter * ++nested if g:session_autoload_enable ==# 1 | call session_manager#sessionLoad(session_manager#getLastSessionName()) | endif
     autocmd VimLeavePre * if g:session_autosave_enable ==# 1 | call session_manager#sessionSave() | endif
+    autocmd VimLeavePre * call session_manager#updateSessionHistory()
 augroup END
 
 command! -nargs=0 SessionList call session_manager#sessionList()
