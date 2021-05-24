@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-24 23:11:46
+" Last Modified : 2021-05-24 23:13:30
 " File          : session_manager.vim
 " Version       : 0.2.0
 " License       : MIT
@@ -32,13 +32,13 @@ function! session_manager#updateSessionHistory() abort
     endif
 endfunction
 
-function! session_manager#getLastSessionName() abort
-    if filereadable(s:session_history_file)
-        return session_manager#getSessionName(readfile(s:session_history_file, '', 1)[0])
-    else
-        return 'No Last Session'
-    endif
-endfunction
+" function! session_manager#getLastSessionName() abort
+"     if filereadable(s:session_history_file)
+"         return session_manager#getSessionName(readfile(s:session_history_file, '', 1)[0])
+"     else
+"         return 'No Last Session'
+"     endif
+" endfunction
 
 function! session_manager#getSessionName(session_full_path) abort
     return fnamemodify(a:session_full_path, ':t:r')
