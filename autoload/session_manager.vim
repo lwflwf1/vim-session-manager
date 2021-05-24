@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-24 17:01:45
+" Last Modified : 2021-05-24 23:11:46
 " File          : session_manager.vim
 " Version       : 0.2.0
 " License       : MIT
@@ -87,6 +87,7 @@ function! session_manager#sessionSave(...) abort
     " call session_manager#updateSessionHistory()
     let &sessionoptions = l:save_sessionoptions
 endfunction
+
 function! session_manager#sessionLoad(...) abort
     if a:0 ==# 0
         if filereadable(s:session_history_file)
@@ -155,8 +156,9 @@ endfunction
 
 function! session_manager#sessionList() abort
     if bufexists("__SessionList__")
+        let l:session_list_exists = (bufwinnr('__SessionList__') !=# -1)
         bwipeout! __SessionList__
-        if bufwinnr('__SessionList__') !=# -1
+        if l:session_list_exists
             return
         endif
     endif
@@ -259,10 +261,10 @@ function! session_manager#sessionDelete(bang, ...) abort
             endif
             " delete session under cursor
             let l:session_name = matchstr(getline("."), '\v\S+')
+            let l:this_session_name = session_manager#getSessionName(s:this_session)
             if l:session_name ==# '*'.l:this_session_name
                 let l:session = s:this_session
                 let s:this_session = ''
-                call delete(s:session_history_file)
             else
                 let l:session = g:session_dir.l:session_name.'.vim'
             endif
@@ -270,10 +272,11 @@ function! session_manager#sessionDelete(bang, ...) abort
             " echomsg 'Delete session: '.l:session
             setlocal modifiable
             normal! dd
+            setlocal nomodifiable
         else
             if !empty(s:this_session)
                 call delete(s:this_session)
-                call delete(s:session_history_file)
+                " call delete(s:session_history_file)
                 " echomsg 'Delete session: '.s:this_session
                 let s:this_session = ''
             else
@@ -285,14 +288,14 @@ function! session_manager#sessionDelete(bang, ...) abort
         for ss in a:000
             let l:session = g:session_dir.ss.'.vim'
             if l:session ==# s:this_session
-                call delete(s:session_history_file)
+                " call delete(s:session_history_file)
                 let s:this_session = ''
             endif
             if filereadable(l:session)
                 call delete(l:session)
             else
                 call session_manager#echoError("Session: '".ss."' does not exist!")
-                return
+                " return
             endif
         endfor
     endif
