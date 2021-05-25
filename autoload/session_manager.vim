@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-24 23:13:30
+" Last Modified : 2021-05-25 12:32:10
 " File          : session_manager.vim
 " Version       : 0.2.0
 " License       : MIT
@@ -58,8 +58,13 @@ function! session_manager#sessionSave(...) abort
     set sessionoptions-=blank sessionoptions-=options sessionoptions+=tabpages
     if a:0 ==# 0
         if empty(s:this_session)
-            let l:session_file = g:session_dir."default_session.vim"
-            let l:description = "This is the default session"
+            if g:session_default_session_enable
+                let l:session_file = g:session_dir."default_session.vim"
+                let l:description = "This is the default session"
+            else
+                call echoError('You must specify the session name!')
+                return
+            endif
         else
             if !exists('s:this_session_description')
                 let l:this_session_file_line1 = readfile(s:this_session, '', 1)[0]
@@ -93,10 +98,13 @@ function! session_manager#sessionLoad(...) abort
         if filereadable(s:session_history_file)
             let l:session_history = readfile(s:session_history_file)
             if len(l:session_history) == 0
-                let l:session_name = 'default_session'
-                let l:session_file = g:session_dir.l:session_name.'.vim'
-                " echomsg 'No previous session!'
-                " return 0
+                if g:session_default_session_enable
+                    let l:session_name = 'default_session'
+                    let l:session_file = g:session_dir.l:session_name.'.vim'
+                else
+                    echomsg 'No previous session!'
+                    return 0
+                endif
             else
                 let l:session_file = l:session_history[-1]
                 let l:session_name = session_manager#getSessionName(l:session_file)
@@ -104,9 +112,12 @@ function! session_manager#sessionLoad(...) abort
                 call remove(l:session_history, -1)
                 call writefile(l:session_history, s:session_history_file)
             endif
-        else
+        elseif g:session_default_session_enable
             let l:session_name = 'default_session'
             let l:session_file = g:session_dir.l:session_name.'.vim'
+        else
+            call echoError('You must specify the session name!')
+            return
         endif
     " elseif a:1 ==# 'No Last Session'
     "     echomsg 'No Last Session!'
