@@ -25,7 +25,7 @@ vim-session-manager is a fast, lightweight, and easy-to-use session manager plug
 - Track current session
 - Delete a session
 - Close current session
-- Automatically remember the last session you used
+- Record session history
 - Automatically save current session when exiting Vim
 - Automatically load last session when entering Vim
 
@@ -54,22 +54,27 @@ COMMANDS                                            *vim-session-manager-Command
 
     `:SessionSave [{name}:{description}]`
 
-    Use this command to save a session.
+    Use this command to save current session.
 
-    For example `:SessionSave abc:this is abc`
+    E.g.:
+    `:SessionSave abc:this is abc`
+    `:SessionSave cdf`
+    `:SessionSave`
 
     The part before `:` is the session name, the part after `:` is the description.
 
-    You can omit `:` if you do not want to add a description.
+    Omit `:` if you do not want to add a description.
 
-    If you are already in a session, you can use this command without arguments
-    to save current session.
+    If you are already in a session and you use this command with a name, then
+    the current session will be changed to that new name.
 
-    However you can specify a new name, then current session will be saved in
-    that new name and you will be changed to the new session.
+    You can use this command without arguments, and there are 3 circumstances:
 
-    If you are not in a session, using this command without arguments will save
-    current session as default_session.
+    1. If you are already in a session, the current session will be saved.
+    2. If you are not in a session and |g:session_default_session_enable| is set to 1,
+    the current session will be saved as default_session.
+    3. If you are not in a session and |g:session_default_session_enable| is set to 0,
+    you must specify the name to save current session.
 
 :SessionLoad                                                        *:SessionLoad*
 
@@ -77,11 +82,26 @@ COMMANDS                                            *vim-session-manager-Command
 
     Use this command to load a session.
 
-    For example `:SessionLoad abc`
+    {name} can be a session name or the previous session number.
 
-    If you use this command without arguments, the last session you loaded or
-    saved will be loaded. If the last session is not existed, then default_session
-    will be loaded.
+    E.g.:
+    `:SessionLoad abc`
+    `:SessionLoad ~2`
+    `:SessionLoad`
+
+    Using this command with `~{number}` means loading the previous {number} session.
+
+    Using this command without arguments to load the last session you used.
+
+    If there is no last session and |g:session_default_session_enable| is set to 1,
+    using this command without arguments will load the default_session.
+
+    Note: 
+    1. `:SessionLoad` is equivalent to `:SessionLoad ~1`
+    2. Before loading into a new session, all unsaved changes will be saved
+    and the old session will be saved automatically.
+    3. Before loading into a new session, all buffers will be wipeouted if
+    |g:session_clear_before_load| is set to 1.
 
 :SessionList                                                        *:SessionList*
     
@@ -89,7 +109,7 @@ COMMANDS                                            *vim-session-manager-Command
 
     Use this command to open a session list.
 
-    You can see all sessions in the session list, and you can navigate in it to
+    All sessions are listed in the session list, and you can navigate in it to
     enter a session or delete a session.
 
 :SessionDelete                                                    *:SessionDelete*
@@ -98,14 +118,16 @@ COMMANDS                                            *vim-session-manager-Command
 
     Use this command to delete a session.
 
-    For example `:SessionDelete abc def`
+    E.g.:
+    `:SessionDelete abc def`
+    `:SessionDelete!`
+    `:SessionDelete`
 
     All sessions that you specified will be deleted.
 
-    If you use this command with bang`!`, all sessions will be deleted.
+    Use this command with bang `!` to delete all sessions.
 
-    If you use this command without arguments, the current session will be
-    deleted.
+    Use this command without arguments to delete current session.
 
 :SessionRename                                                  *:SessionRename*
 
@@ -113,9 +135,11 @@ COMMANDS                                            *vim-session-manager-Command
     
     Use this command to rename a session.
 
-    For example `SessionRename abc def`
+    E.g.:
+    `:SessionRename abc def`
 
-    If you rename current session, you will be changed to the new session.
+    Note: If you rename the current session, the current session will be
+    changed to that new name.
 
 :SessionClose                                                     *:SessionClose*
 
@@ -123,27 +147,28 @@ COMMANDS                                            *vim-session-manager-Command
 
     Use this command to close current session.
 
-    This command will save all unsaved changes and wipeout all buffers.
+    Note: This command will save all unsaved changes and wipeout all buffers
+    if |g:session_clear_before_load| is set to 1.
 
 ================================================================================
-OPTIONS                                             *vim-session-manager-Options*
+OPTIONS                                              *vim-session-manager-Options*
 
-g:session_autosave_enable                           *g:session_autosave_enable*
+g:session_autosave_enable                              *g:session_autosave_enable*
 
     Default: 1
 
     Whether to save current session when exiting vim.
 
-g:session_autoload_enable                           *g:session_autoload_enable*
+g:session_autoload_enable                              *g:session_autoload_enable*
 
     Default: 0
 
     Whether to load last session you used when entering vim.
 
-g:session_dir                                                   *g:session_dir*
+g:session_dir                                                     *g:session_dir*
 
-    Default: if use vim: '~/.vim/session'
-             if use neovim: stdpath('data').'/session'
+    Default: vim: '~/.vim/session'
+             neovim: stdpath('data').'/session'
 
     The session directory
 
@@ -153,25 +178,36 @@ g:session_track_current_session                 *g:session_track_current_session
 
     Whether to track current session
 
-    If you set this to 1, then once event `BufEnter` is triggerd,
-    command `:Sessionsave` will automatically called.
+    If you set this to 1, then once event `BufEnter` is triggerd, the current
+    session will be saved.
 
 g:session_clear_before_load                          *g:session_clear_before_load*
 
     Default: 1
 
-    Load a session will wipeout all buffers by default.
+    Whether to wipeout all buffers before loading a session.
 
-    Set it to 0 can disable this behavier.
+g:session_default_session_enable                *g:session_default_session_enable*
+
+    Default: 1
+
+    If you set this to 1, then you don't need to pass {name} to `:SessionSave`
+    and `:SessionLoad`
+
+g:session_max_history                                      *g:session_max_history*
+    
+    Default: 100
+
+    Maximum number of session history records
 
 ================================================================================
-STATUSLINE                                      *vim-session-manager-StatusLine*
+STATUSLINE                                        *vim-session-manager-StatusLine*
 
 Function *SessionStatusLine()* returns the name of the current session if you are
 in a session. Otherwise it returns empty string.
 
 ================================================================================
-LICENSE                                             *vim-session-manager-License*
+LICENSE                                              *vim-session-manager-License*
 
 MIT
 
