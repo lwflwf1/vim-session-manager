@@ -191,20 +191,22 @@ g:session_default_session_enable                *g:session_default_session_enabl
 
     Default: 1
 
-    If you set this to 1, then you don't need to pass {name} to `:SessionSave`
-    and `:SessionLoad`
+    If you set this to 1, you don't need to pass {name} to `:SessionSave`
+    and `:SessionLoad`.
 
 g:session_max_history                                      *g:session_max_history*
     
     Default: 100
 
-    Maximum number of session history records
+    Maximum number of session history records.
 
 ================================================================================
 STATUSLINE                                        *vim-session-manager-StatusLine*
 
-Function *SessionStatusLine()* returns the name of the current session if you are
-in a session. Otherwise it returns empty string.
+Use function *SessionStatusLine()* to display current session name in statusline.
+
+If you are in a session, it returns the current session name, otherwise it
+returns empty string.
 
 ================================================================================
 LICENSE                                              *vim-session-manager-License*
@@ -215,6 +217,6 @@ MIT
 CREDITS                                              *vim-session-manager-Credits*
 
 Author: lwflwf1
-https://github.com/lwflwf1
+Website: https://github.com/lwflwf1/vim-session-manager
 
 vim:textwidth=80:tabstop=4:filetype=help
