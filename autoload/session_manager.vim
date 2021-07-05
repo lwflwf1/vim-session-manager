@@ -2,7 +2,7 @@
 " Maintainer    : lwflwf1
 " Website       : https://github.com/lwflwf1/vim-session-manager.com
 " Created Time  : 2021-04-29 16:21:39
-" Last Modified : 2021-05-25 12:32:10
+" Last Modified : 2021-07-06 01:41:58
 " File          : session_manager.vim
 " Version       : 0.2.0
 " License       : MIT
@@ -62,7 +62,7 @@ function! session_manager#sessionSave(...) abort
                 let l:session_file = g:session_dir."default_session.vim"
                 let l:description = "This is the default session"
             else
-                call echoError('You must specify the session name!')
+                call session_manager#echoError('You must specify the session name!')
                 return
             endif
         else
@@ -116,7 +116,7 @@ function! session_manager#sessionLoad(...) abort
             let l:session_name = 'default_session'
             let l:session_file = g:session_dir.l:session_name.'.vim'
         else
-            call echoError('You must specify the session name!')
+            call session_manager#echoError('You must specify the session name!')
             return
         endif
     " elseif a:1 ==# 'No Last Session'
@@ -127,7 +127,7 @@ function! session_manager#sessionLoad(...) abort
             let l:session_file = readfile(s:session_history_file)[-a:1[1:]]
             let l:session_name = session_manager#getSessionName(l:session_file)
         else
-            call echoError('No such session')
+            call session_manager#echoError('No such session')
             return
         endif
     else
