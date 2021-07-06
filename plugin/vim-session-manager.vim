@@ -2,7 +2,7 @@
 " Maintainer:    lwflwf1
 " Website:       https://github.com/lwflwf1/vim-session-manager.com
 " Created Time:  2021-04-21 16:03:18
-" Last Modified: 2021-07-02 21:00:05
+" Last Modified: 2021-07-07 00:12:32
 " File:          vim-session-manager.vim
 " Version:       0.2.0
 " License:       MIT
@@ -19,7 +19,7 @@ set cpo&vim
 if has('nvim')
     let g:session_dir = get(g:, 'session_dir', stdpath('data').'/session/')
 else
-    let g:session_dir = get(g:, 'session_dir', '~/.vim/session/')
+    let g:session_dir = get(g:, 'session_dir', $HOME.'/.vim/session/')
 endif
 
 let g:session_autosave_enable        = get(g:, 'session_autosave_enable', 1)
